@@ -1,14 +1,16 @@
 #pragma once
 #include "Shape.h"
+#include "Square.h"
 
-class Circle : Shape {
+class Circle : public Shape {
 public:
-	Circle(float posX, float posY) : Shape(posX, posY) {};
+	Circle(float posX, float posY, float radius);
 	~Circle();
 
-	void setPosX(float x);
-	void setPosY(float y);
+	float GetRadius() const;
 
+	virtual void CheckOverlap(const Circle& Other);
+	virtual void CheckOverlap(const Square& Other);
 private:
-	float posX, posY;
+	float radius;
 };
