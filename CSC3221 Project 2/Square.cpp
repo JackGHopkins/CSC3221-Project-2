@@ -7,13 +7,13 @@ Square::Square(float posX, float posY, float length) :
 Square::~Square() {}
 
 float Square::GetLength() const {
-	this->length;
+	return this->length;
 }
 
-void Square::CheckOverlap(const Circle& Other) {
-
+void Square::CheckOverlap(Circle& Other) {
+	Other.CheckOverlap(*this);
 }
 
-void Square::CheckOverlap(const Square& Other) {
+void Square::CheckOverlap(Square& Other) {
 
 }

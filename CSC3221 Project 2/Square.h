@@ -9,9 +9,9 @@ public:
 
 	float GetLength() const;
 
-	virtual void CheckOverlap(const Circle& Other);
-	virtual void CheckOverlap(const Square& Other);
+	virtual void CheckOverlap(Circle& Other);
+	virtual void CheckOverlap(Square& Other);
 private:
-	float posX, posY, length;
+	float length;
 };
 	
