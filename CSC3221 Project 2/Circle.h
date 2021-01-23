@@ -8,12 +8,9 @@ public:
 	~Circle();
 
 	float GetRadius() const;
-
-	bool CentreWithinRadius(float posX, float posY, float raidus) const;
 	bool PointWithinRadius(float posX, float posY) const;
 
-	virtual void CheckOverlap(Circle& Other);
-	virtual void CheckOverlap(Square& Other);
+	virtual void CheckCollision(Shape& Other);
 private:
 	float radius;
 };

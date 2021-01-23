@@ -8,9 +8,7 @@ public:
 	~Square();
 
 	float GetLength() const;
-
-	virtual void CheckOverlap(Circle& Other);
-	virtual void CheckOverlap(Square& Other);
+	void CheckCollision(Shape& Other);
 private:
 	float length;
 };
