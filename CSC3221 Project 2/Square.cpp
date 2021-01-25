@@ -3,8 +3,7 @@
 #include <iostream>
 
 Square::Square(float posX, float posY, float length) : 
-	Shape(posX, posY, false),
-	length(length) {}
+	Shape(posX, posY, length, false) {}
 
 Square::~Square() {}
 

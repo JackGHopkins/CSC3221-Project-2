@@ -13,8 +13,8 @@ const int GRID_MAX_WIDTH = 2000;
 const int GRID_MAX_HEIGHT = 2000;
 const int SHAPE_TYPE_SIZE = 2;
 
-const float SHAPE_MAX_LENGTH_RADIUS = 50.0f;
-const float SHAPE_MIN_LENGTH_RADIUS = 0.1f;
+const float SHAPE_MAX_SIZE = 50.0f;
+const float SHAPE_MIN_SIZE = 0.1f;
 const float SHAPE_MAX_VELOCITY = 0.2f;
 
 std::multimap<int, Shape*> multimap;
@@ -43,7 +43,7 @@ void GenerateMultimap() {
 	for (int i = 0; i < SIZE; i++) {
 		// Random Number that chooses a random Enum from ShapeType.
 		int shapeType = int(rand() % SHAPE_TYPE_SIZE);
-		float randLength = RandomFloat(SHAPE_MIN_LENGTH_RADIUS, SHAPE_MAX_LENGTH_RADIUS);
+		float randLength = RandomFloat(SHAPE_MIN_SIZE, SHAPE_MAX_SIZE);
 		float posX = RandomFloat(0, GRID_MAX_WIDTH);
 		float posY = RandomFloat(0, GRID_MAX_HEIGHT);
 
@@ -115,6 +115,16 @@ void TransformMultimap() {
 
 }
 
+
+
+/*
+	Method it to check collisions. Order of operation:
+		1. Iterate through Cells to find Shape.
+		2. Get the Shape and find the possible are it could have collisions
+		   within given that its origin is in a particular Cell.
+		3. Check for collisions with all possible shapes in that area.
+		4. Delete Shapes with collisions.
+*/
 void CheckCollisions() {
 	if (multimap.empty())
 		std::cout << "MULTIMAP IS EMPTY" << std::endl;
@@ -125,13 +135,59 @@ void CheckCollisions() {
 			int key = x + (y * CELL_SIZE);
 			// Check Key for shapes
 			if (multimap.count(key) != 0) {
-
 				auto range = multimap.equal_range(key);
 				// Iterate through number of shapes in Cell.
 				for (auto shapeNo = range.first; shapeNo != range.second; shapeNo++) {
-					// Calculating Maximum number of Cells shape can cover.
-					Shape* s = shapeNo->second;
-					int maxCellCoverage = ceil(s->);
+					if (shapeNo->second->GetCollision()) {
+						multimap.erase(shapeNo);
+						continue;
+					}
+
+
+					// Calculating Maximum number of Cells shape can cover. Equals RoundUp(Size / Cell Size) + 1 + RoundUp(MaxSize / Cell Size) - 1.
+					int maxCellCoverage =	ceil(shapeNo->second->GetSize()  / CELL_SIZE) + // Checking possible Cells that the shape could habit.
+											ceil(SHAPE_MAX_SIZE / CELL_SIZE); // Checking if any Cells contain possible largest shape around it.
+
+					// Finding Cell Bounds
+					int CellsLowerX = x - floor(maxCellCoverage / 2);
+					int CellsHigherX = x + floor(maxCellCoverage / 2);
+					int CellsLowerY = y - floor(maxCellCoverage / 2);
+					int CellsHigherY = y + floor(maxCellCoverage / 2);
+					
+					// Checking if the bounds are on the boarder of the grid.
+					if (CellsLowerX < 0)
+						CellsLowerX = 0;
+
+					if (CellsHigherX > ceil(GRID_MAX_WIDTH / CELL_SIZE))
+						CellsHigherX = ceil(GRID_MAX_WIDTH / CELL_SIZE);
+
+					if (CellsLowerY < 0)
+						CellsLowerY = 0;
+
+					if (CellsHigherY > ceil(GRID_MAX_HEIGHT / CELL_SIZE))
+						CellsHigherY = ceil(GRID_MAX_HEIGHT / CELL_SIZE);
+
+					// Checking all possible surrounding cells that the Shape could collide within.
+					for (int i = CellsLowerX; i <= CellsHigherX; i++) {
+						for (int j = CellsLowerY; j <= CellsHigherY; j++) {
+							// Make another key for the Cells you are comparing it to.
+							int keyCompare = i + (j * CELL_SIZE);
+							// Check Key for shapes
+							if (multimap.count(keyCompare) != 0) {
+								auto range = multimap.equal_range(keyCompare);
+								for (auto shapeCompare = range.first; shapeCompare != range.second; shapeCompare++) {
+									shapeNo->second->CheckCollision(*(shapeCompare->second));
+									if (shapeNo->second->GetCollision()) {
+										multimap.erase(shapeNo);
+										multimap.erase(shapeCompare);
+									}
+
+								}
+							}
+
+
+						}
+					}
 				}
 
 			}

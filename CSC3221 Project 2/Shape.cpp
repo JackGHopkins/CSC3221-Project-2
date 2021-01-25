@@ -1,8 +1,9 @@
 #include "Shape.h"
 
-Shape::Shape(float posX, float posY, bool collision) :
+Shape::Shape(float posX, float posY, float size, bool collision) :
 	posX(posX),
 	posY(posY),
+	size(size),
 	collision(collision) {};
 
 Shape::~Shape() {}
@@ -10,6 +11,8 @@ Shape::~Shape() {}
 float Shape::GetPosX() const { return this->posX; }
 
 float Shape::GetPosY() const { return this->posY; }
+
+float Shape::GetSize() const { return this->size;  }
 
 bool Shape::GetCollision() const { return this->collision; }
 

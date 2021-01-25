@@ -5,7 +5,7 @@
 #include <math.h>
 
 Circle::Circle(float posX, float posY, float radius) :
-	Shape(posX, posY, false),
+	Shape(posX, posY, radius * 2, false), 
 	radius(radius) {}
 
 Circle::~Circle() {}
