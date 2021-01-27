@@ -3,7 +3,8 @@
 #include <iostream>
 
 Square::Square(float posX, float posY, float length) : 
-	Shape(posX, posY, length, false) {}
+	Shape(posX, posY, length, false),
+	length(length) {}
 
 Square::~Square() {}
 
@@ -14,6 +15,7 @@ float Square::GetLength() const {
 void Square::CheckCollision(Shape& Other) {
 	Collision collision;
 	try {
+		// Checks if Other is a Circle or a Square.
 		if (typeid(Other) == typeid(Circle))
 			collision.isCollision(static_cast<Circle&>(Other), *this);
 		else if (typeid(Other) == typeid(Square))

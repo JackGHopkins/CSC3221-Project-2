@@ -17,6 +17,7 @@ float Circle::GetRadius() const {
 void Circle::CheckCollision(Shape& Other) {
 		Collision collision;
 		try {
+			// Checks if Other is a Circle or a Square.
 			if (typeid(Other) == typeid(Circle))
 				collision.isCollision(static_cast<Circle&>(Other), *this);
 			else if (typeid(Other) == typeid(Square))
@@ -29,7 +30,7 @@ void Circle::CheckCollision(Shape& Other) {
 		}
 }
 
-// For checking if a certain point of a shape is within the Circle.
+/* For checking if a certain point of a shape is within the Circle. */
 bool Circle::PointWithinRadius(float posX, float posY) const {
 	float distance = sqrtf(powf(this->GetPosX() - posX, 2.0) + powf(this->GetPosY() - posY, 2.0));
 

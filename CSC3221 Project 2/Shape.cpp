@@ -22,7 +22,8 @@ void Shape::SetPosY(float y) { this->posY = y; }
 
 void Shape::SetCollision(bool collision) { this->collision = collision; }
 
-void Shape::Transform(float offsetX, float offsetY) {
-	this->SetPosX(this->GetPosX() + offsetX);
-	this->SetPosY(this->GetPosY() + offsetY);
+/* Moves Shape to a new position in the grid. */
+void Shape::Transform(float newX, float newY) {
+	this->SetPosX(newX);
+	this->SetPosY(newY);
 }

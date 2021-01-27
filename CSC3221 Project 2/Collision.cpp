@@ -1,88 +1,61 @@
 #include "Collision.h"
 #include <math.h>
 
-Collision::Collision() {}
-
-Collision::~Collision() {}
-
+/*
+	Checks collisions between two Circles.
+*/
 void Collision::isCollision(Circle& c1, Circle& c2) {
 	c1.SetCollision(IsSameShapeCollide(c1.GetPosX(), c1.GetPosY(), c1.GetRadius(), c2.GetPosX(), c2.GetPosY(), c2.GetRadius()));
+	c2.SetCollision(c1.GetCollision());
 }
 
+/*
+	Checks collisions between two Squares.
+*/
 void Collision::isCollision(Square& s1, Square& s2) {
 	s1.SetCollision(IsSameShapeCollide(s1.GetPosX(), s1.GetPosY(), s1.GetLength() / 2, s2.GetPosX(), s2.GetPosY(), s2.GetLength() / 2 ));
+	s2.SetCollision(s1.GetCollision());
 }
 
+/*
+	Checks collisions between a Circle and a Square.
+*/
 void Collision::isCollision(Circle& c, Square& s) {
-	float sqX1 = s.GetPosX() - (s.GetLength() / 2); // left
-	float sqX2 = s.GetPosX() + (s.GetLength() / 2); // right
-	float sqY1 = s.GetPosY() - (s.GetLength() / 2); // bottom
-	float sqY2 = s.GetPosY() + (s.GetLength() / 2); // top
+	// Finds the distance between the centers of the shapes.
+	float distanceX = fabsf(c.GetPosX() - s.GetPosX());
+	float distanceY = fabsf(c.GetPosY() - s.GetPosY());
 
-	float cX1 = c.GetPosX() - c.GetRadius(); // left
-	float cX2 = c.GetPosX() + c.GetRadius(); // right
-	float cY1 = c.GetPosY() - c.GetRadius(); // bottom
-	float cY2 = c.GetPosY() + c.GetRadius(); // top
+	// Checks for case when shapes are out of range ofr the X or Y axis.
+	if (distanceX > (s.GetLength() / 2 + c.GetRadius())) {
+		s.SetCollision(false);
+		c.SetCollision(false);
+		return;
+	}
+	if (distanceY > (s.GetLength() / 2 + c.GetRadius())) {
+		s.SetCollision(false);
+		c.SetCollision(false);
+		return;
+	}
 
-	// Check if the centers are inside the circle.
-	if (IsSameShapeCollide(c.GetPosX(), c.GetPosY(), c.GetRadius(),s.GetPosX(), s.GetPosY(), s.GetLength() / 2)) {
+	// Checks for Case where the shapes are colliding directly horizontally or vertically.
+	if (distanceX <= (s.GetLength()/ 2)) {
+		s.SetCollision(true);
+		c.SetCollision(true);
+		return;
+	}
+	if (distanceY <= (s.GetLength() / 2)) {
+		s.SetCollision(true);
 		c.SetCollision(true);
 		return;
 	}
 
-	bool cLeftOfS = false;
-	bool cRightOfS = false;
-	bool cBellowS = false;
-	bool cAboveS = false;
+	// Checks if Circle is overlapping with the corner of the Square.
+	float cornerCheck = powf((distanceX - s.GetLength() / 2), 2.0) +
+		powf((distanceY - s.GetLength() / 2), 2.0);
 
-	// Check if the left of the square is to the right of the circle
-	if (sqX1 >= cX2)
-		cLeftOfS = true;
-
-	// Check if the right of the square is to the left of the cirlce
-	if (sqX2 <= cX1)
-		cRightOfS = true;
-
-	// Check if the bottom of the square is above of the circle
-	if (sqY1 >= cY2)
-		cBellowS = true;
-
-	// Check if the top of the square is bellow of the cirlce
-	if (sqY2 <= cY1)
-		cAboveS = true;
-
-	/*
-	cLS	cBs R
-	0	0	Top Right
-	0	1	Bottom Right
-	1	0	Top Left
-	1	1	Bottom Left
-	*/
-
-	// Top Right 
-	if (!cLeftOfS && !cBellowS) {
-		// Get Bottom Left Circle
-		c.SetCollision(c.PointWithinRadius(sqX1, sqY1));
-	}
-
-	// Bottom Right
-	if (!cLeftOfS && cBellowS) {
-		// Get Top Left Circle
-		c.SetCollision(c.PointWithinRadius(sqX1, sqY2));
-	}
-
-	// Top Left
-	if (cLeftOfS && !cBellowS) {
-		// Get Bottom Right Cirlce
-		c.SetCollision(c.PointWithinRadius(sqX2, sqY1));
-	}
-
-	// Bottom Left
-	if (cLeftOfS && cBellowS) {
-		// Get Top Right Circle
-		c.SetCollision(c.PointWithinRadius(sqX2, sqY2));
-	}
-
+	bool cornerCollision = (cornerCheck <= powf(c.GetRadius(), 2.0));
+	c.SetCollision(cornerCollision);
+	s.SetCollision(cornerCollision);
 }
 
 /*
