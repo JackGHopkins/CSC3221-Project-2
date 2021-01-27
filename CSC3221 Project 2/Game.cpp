@@ -14,30 +14,34 @@ const int CELL_SIZE = 100;
 const int GRID_MAX_WIDTH = 2000;
 const int GRID_MAX_HEIGHT = 2000;
 
-const float SHAPE_MAX_SIZE = 90.0f;
+const float SHAPE_MAX_SIZE = 100.0f;
 const float SHAPE_MIN_SIZE = 70.0f;
 const float SHAPE_TRANSFORM_MULTIPLIER = 10.0f;
 
+bool IS_RANDOM = true;
+
 std::multimap<int, Shape*> multimap;
+std::vector<int> movementVectorX;
+std::vector<int> movementVectorY;
 std::vector<Shape*> eraseVector;
 
 /* METHOD DECLARATIONS */
 void CheckCollisions();
 void DeleteShapes();
-void Game();
-void GenerateMultimap();
+void GenerateRandomMultimap();
 float RandomFloat(float min, float max);
 void PrintCollision(Shape* i, Shape* j);
+void RandomGame();
 void TransformMultimap();
 void Test();
 
 /* METHOD IMPLEMENTATION */
 int main() {
-	/* Testing Methods */
-	// Test();
+	/* Testing for unique circumstances. Should match the Sample Output. */
+	Test();
 
 	/* Main Game, with Random Shapes */
-	Game();
+	RandomGame();
 
 	return 0;
 }
@@ -69,20 +73,19 @@ void CheckCollisions() {
 				// Iterate through number of shapes in Cell.
 				for (auto shapeNo = range.first; shapeNo != range.second; shapeNo++) {
 					if (shapeNo->second->GetCollision()) {
-						eraseVector.push_back(shapeNo->second);
 						continue;
 					}
 
 					// Calculating Maximum number of Cells shape can cover. Equals RoundUp(Size / Cell Size) + 1 + RoundUp(MaxSize / Cell Size) - 1.
-					int maxCellCoverage =	ceil(shapeNo->second->GetSize()  / CELL_SIZE) + // Checking possible Cells that the shape could habit.
-											ceil(SHAPE_MAX_SIZE / CELL_SIZE); // Checking if any Cells contain possible largest shape around it.
+					int maxCellCoverage = ceil(shapeNo->second->GetSize() / CELL_SIZE) + // Checking possible Cells that the shape could habit.
+						ceil(SHAPE_MAX_SIZE / CELL_SIZE); // Checking if any Cells contain possible largest shape around it.
 
 					// Finding Cell Bounds
 					int CellsLowerX = x - floor(maxCellCoverage / 2);
 					int CellsHigherX = x + floor(maxCellCoverage / 2);
 					int CellsLowerY = y - floor(maxCellCoverage / 2);
 					int CellsHigherY = y + floor(maxCellCoverage / 2);
-					
+
 					// Checking if the bounds are on the boarder of the grid.
 					if (CellsLowerX < 0)
 						CellsLowerX = 0;
@@ -107,10 +110,19 @@ void CheckCollisions() {
 								for (auto shapeCompare = range.first; shapeCompare != range.second; shapeCompare++) {
 									if (shapeNo->second == shapeCompare->second || shapeCompare->second->GetCollision() == true)
 										continue;
+									
+									// Break if Shape is already collided.
+									if  (shapeNo->second->GetCollision() == true) {
+										break;
+									}
 
 									shapeNo->second->CheckCollision(*(shapeCompare->second));
+
 									if (shapeNo->second->GetCollision() == true || shapeCompare->second->GetCollision() == true) {
 										PrintCollision(shapeNo->second, shapeCompare->second);
+										eraseVector.push_back(shapeNo->second);
+										eraseVector.push_back(shapeCompare->second);
+										break;
 									}
 
 								}
@@ -125,62 +137,27 @@ void CheckCollisions() {
 }
 
 /*
-	Iterate through eraseVector, deleting all the elements (collided shapes), and updating it with a clean vector.
+	Iterate through eraseVector, deleting all the elements (collided shapes),
+	and updating it with a clean vector.
 */
 void DeleteShapes() {
-	for (int i = 0; i < eraseVector.size(); i++)
-		delete eraseVector[i];
+	// Only Erase if there are Shapes to Erase.
+	if (eraseVector.size() > 0) {
+		// Delete Shapes added to eraseVector.
+		for (int i = 0; i < eraseVector.size(); i++)
+			delete eraseVector[i];
 
-	std::vector<Shape*> cleanVector;
-	eraseVector = cleanVector;
+		std::vector<Shape*> cleanVector;
+		eraseVector = cleanVector;
+		std::cout << "No. Shapes Remaining:" << multimap.size() << std::endl;
+	}
+	return;
 }
 
 /*
-	The Main game loop, where Multimap will move in random
-	directions until they collide and be destroyed.
-*/
-void Game() {
-
-	GenerateMultimap();
-	Grid grid(GRID_MAX_WIDTH, GRID_MAX_HEIGHT, multimap);
-
-	while (true) {
-		// Break if multimap is empty or has only one shape left.
-		if (multimap.size() == 0 || multimap.size() == 1)
-			break;
-
-		// Check Multimap for Collisions.
-		CheckCollisions();
-
-		// Move Multimap
-		TransformMultimap();
-
-		// Only Erase if there are Shapes to Erase.
-		if (eraseVector.size() > 0) {
-			// Delete Shapes added to eraseVector.
-			DeleteShapes();
-			std::cout << "No. Shapes Remaining:" << multimap.size() << std::endl;
-		}
-	}
-
-	// Delete left over shapes.
-	for (int x = 0; x < GRID_MAX_WIDTH / CELL_SIZE; x++) {
-		for (int y = 0; y < GRID_MAX_HEIGHT / CELL_SIZE; y++) {
-			// Finding cell coordinates.
-			int cellX = floor(x / CELL_SIZE);
-			int cellY = floor(x / CELL_SIZE);
-
-			// Creating Unique Key for every Cell. Brackets are for readibility.
-			int key = cellX + (cellY * CELL_SIZE);
-			multimap.erase(key);
-		}
-	}
-}
-
-/* 
 	Generate shapes of random position and size (within a range), placing them in multimap.
 */
-void GenerateMultimap() {
+void GenerateRandomMultimap() {
 	for (int i = 0; i < SHAPE_NUMBER; i++) {
 		// Random Number that chooses a random Enum from ShapeType.
 		int shapeType = int(rand() % SHAPE_TYPE_NUMBER);
@@ -215,6 +192,48 @@ float RandomFloat(float min, float max) {
 }
 
 /*
+	The random game loop, where Multimap is made of Shapes with Random sizes,
+	position and will move in random directions until they collide and be destroyed.
+*/
+void RandomGame() {
+	std::cout << "***** RANDOMGAME: START *****" << std::endl;
+	GenerateRandomMultimap();
+	Grid grid(GRID_MAX_WIDTH, GRID_MAX_HEIGHT, multimap);
+
+	while (true) {
+		// Break if multimap is empty or has only one shape left.
+		if (multimap.size() == 0 || multimap.size() == 1)
+			break;
+
+		// Check Multimap for Collisions.
+		CheckCollisions();
+
+		// Move Multimap
+		TransformMultimap();
+
+		// Delete shapes from eraseVector.
+		DeleteShapes();
+	}
+
+	// Delete left over shapes.
+	for (int x = 0; x < GRID_MAX_WIDTH / CELL_SIZE; x++) {
+		for (int y = 0; y < GRID_MAX_HEIGHT / CELL_SIZE; y++) {
+			// Finding cell coordinates.
+			int cellX = floor(x / CELL_SIZE);
+			int cellY = floor(x / CELL_SIZE);
+
+			// Creating Unique Key for every Cell. Brackets are for readibility.
+			int key = cellX + (cellY * CELL_SIZE);
+			multimap.erase(key);
+		}
+	}
+	std::cout << "***** RANDOMGAME: END *****" << std::endl;
+	std::cout << "------------------------" << std::endl;
+	std::cout << std::endl;
+	std::cout << std::endl;
+}
+
+/*
 	Prints information about the collision.
 */
 void PrintCollision(Shape* i, Shape* j) {
@@ -224,7 +243,7 @@ void PrintCollision(Shape* i, Shape* j) {
 		"+ Shape No: " << i <<
 		" | PosX: " << i->GetPosX() <<
 		" | PosY: " << i->GetPosY() <<
-		" | CellX: " << floor(i->GetPosX() / CELL_SIZE)<<
+		" | CellX: " << floor(i->GetPosX() / CELL_SIZE) <<
 		" | CellY: " << floor(i->GetPosY() / CELL_SIZE) <<
 		" | Collision: " << i->GetCollision() <<
 		" | Size: " << i->GetSize() <<
@@ -250,6 +269,8 @@ void PrintCollision(Shape* i, Shape* j) {
 */
 void TransformMultimap() {
 	std::multimap<int, Shape*> newMultimap;
+	// Keeps track of how a shape moves when IS_RANDOM = false.
+	int moveCounter = 0;
 
 	// Iterate through Cells
 	for (int x = 0; x < GRID_MAX_WIDTH / CELL_SIZE; x++) {
@@ -263,14 +284,25 @@ void TransformMultimap() {
 					if (shapeNo->second->GetCollision() == true) {
 						continue;
 					}
+					float newPosX;
+					float newPosY;
 
-					// Create random float between -1 and 1, and adds that to current position.
-					float newPosX = shapeNo->second->GetPosX()
-						+ RandomFloat(-1.0, 1.0)
-						* SHAPE_TRANSFORM_MULTIPLIER;
-					float newPosY = shapeNo->second->GetPosY() 
-						+ RandomFloat(-1.0, 1.0)
-						* SHAPE_TRANSFORM_MULTIPLIER;
+					if (IS_RANDOM) {
+						// Create random float between -1 and 1, and adds that to current position.
+						newPosX = shapeNo->second->GetPosX()
+							+ RandomFloat(-1.0, 1.0)
+							* SHAPE_TRANSFORM_MULTIPLIER;
+						newPosY = shapeNo->second->GetPosY()
+							+ RandomFloat(-1.0, 1.0)
+							* SHAPE_TRANSFORM_MULTIPLIER;
+					}
+					else {
+						// Create random float between -1 and 1, and adds that to current position.
+						newPosX = shapeNo->second->GetPosX()
+							+ movementVectorX[moveCounter];
+						newPosY = shapeNo->second->GetPosY()
+							+ movementVectorY[moveCounter];
+					}
 
 					// Checking if New Positions are Out of Bounds.
 					if (newPosX < 0 || newPosX > GRID_MAX_WIDTH)
@@ -284,6 +316,9 @@ void TransformMultimap() {
 					int cellY = floor(shapeNo->second->GetPosY() / CELL_SIZE);
 					int key = cellX + (cellY * CELL_SIZE);
 					newMultimap.insert(std::make_pair(key, shapeNo->second));
+
+					if (!IS_RANDOM)
+						moveCounter++;
 				}
 			}
 		}
@@ -293,48 +328,63 @@ void TransformMultimap() {
 }
 
 /*
-	TESTING
+	TESTING Methods for particular scenoriors. Global variables need to be set to this:
+		const int CELL_SIZE = 100;
+		const int GRID_MAX_WIDTH = 2000;
+		const int GRID_MAX_HEIGHT = 2000;
 */
 void Test() {
-	std::multimap<int,Shape*> cleanMultimap;
-	// Test 1:
-	std::cout << "TEST 1: Circle colliding with Circle" << std::endl;
+	std::cout << "***** TESTING: START *****" << std::endl;
+
+	std::multimap<int, Shape*> cleanMultimap;
+	IS_RANDOM = false;
+
+	// Setting up movementVector
+	movementVectorX = { 10, -10, 10, -10};
+	movementVectorY = { 0, 0 , 0, 0};
+
+	// TEST 1: Circle colliding with Circle
 	multimap.insert(std::make_pair(0, new Circle(0, 0, 10 / 2)));
 	multimap.insert(std::make_pair(0, new Circle(5, 0, 10 / 2)));
-	multimap.insert(std::make_pair(0, new Circle(50, 0, 10 /2)));
-	CheckCollisions();
-	multimap = cleanMultimap;
+	multimap.insert(std::make_pair(0, new Circle(80, 0, 10 / 2)));
 
-	// Test 1:
-	std::cout << "TEST 2: Square colliding with Square" << std::endl;
-	multimap.insert(std::make_pair(0, new Square(0, 0, 10)));
-	multimap.insert(std::make_pair(0, new Square(5, 0, 10)));
-	multimap.insert(std::make_pair(0, new Square(50, 0, 10)));
-	CheckCollisions();
-	multimap = cleanMultimap;
+	// TEST 2: Square colliding with Square
+	multimap.insert(std::make_pair(1, new Square(100, 0, 10)));
+	multimap.insert(std::make_pair(1, new Square(140, 0, 10)));
+	multimap.insert(std::make_pair(1, new Square(145, 0, 10)));
 
-	std::cout << "TEST 3: Circle colliding with Square" << std::endl;
+	// TEST 3: Circle colliding with Square
 	// Test for overlap.
-	multimap.insert(std::make_pair(0, new Circle(0, 0, 10 / 2)));
-	multimap.insert(std::make_pair(0, new Square(5, 0, 10)));
+	multimap.insert(std::make_pair(2, new Circle(200, 0, 10 / 2)));
+	multimap.insert(std::make_pair(2, new Square(205, 0, 10)));
 
 	// No Overlap
-	multimap.insert(std::make_pair(0, new Circle(50, 0, 10 / 2)));
-	multimap.insert(std::make_pair(0, new Square(80, 0, 10)));
+	multimap.insert(std::make_pair(2, new Circle(250, 0, 10 / 2)));
+	multimap.insert(std::make_pair(2, new Square(270, 0, 10)));
 
 	// Circle within Square
-	multimap.insert(std::make_pair(0, new Circle(50, 50, 5 / 2)));
-	multimap.insert(std::make_pair(0, new Square(50, 50, 10)));
+	multimap.insert(std::make_pair(2, new Circle(250, 50, 5 / 2)));
+	multimap.insert(std::make_pair(2, new Square(250, 50, 10)));
 
 	// Square within Circle
-	multimap.insert(std::make_pair(0, new Circle(0, 50, 10 / 2)));
-	multimap.insert(std::make_pair(0, new Square(0, 50, 5)));
+	multimap.insert(std::make_pair(2, new Circle(200, 50, 10 / 2)));
+	multimap.insert(std::make_pair(2, new Square(200, 50, 5)));
 
 	// Crossing Corners 
-	multimap.insert(std::make_pair(1, new Circle(130, 33, 37 / 2)));
-	multimap.insert(std::make_pair(1, new Square(110, 10, 20)));
+	multimap.insert(std::make_pair(3, new Circle(330, 33, 37 / 2)));
+	multimap.insert(std::make_pair(3, new Square(310, 10, 20)));
 
-	CheckCollisions();
+	for (int i = 0; i < 2; i++) {
+		CheckCollisions();
+		TransformMultimap();
+		DeleteShapes();
+	}
 
 	multimap = cleanMultimap;
+	IS_RANDOM = true;
+
+	std::cout << "***** TESTING: END *****" << std::endl;
+	std::cout << "------------------------" << std::endl;
+	std::cout << std::endl;
+	std::cout << std::endl;
 }
