@@ -13,8 +13,15 @@ void Collision::isCollision(Circle& c1, Circle& c2) {
 	Checks collisions between two Squares.
 */
 void Collision::isCollision(Square& s1, Square& s2) {
-	s1.SetCollision(IsSameShapeCollide(s1.GetPosX(), s1.GetPosY(), s1.GetLength() / 2, s2.GetPosX(), s2.GetPosY(), s2.GetLength() / 2 ));
-	s2.SetCollision(s1.GetCollision());
+	if (s1.GetPosX() < s2.GetPosX() + (s2.GetLength() / 2) &&	// Checks if s1 is right of s2's left side.    
+		s1.GetPosX() + (s1.GetLength() / 2) > s2.GetPosX() &&	// Checks if s1 is left of s2's right side.  
+		s1.GetPosY() < s2.GetPosY() + (s2.GetLength() / 2) &&	// Checks if s1 is below of s2's top.  
+		s1.GetPosX() + (s1.GetLength() / 2) > s2.GetPosY())		// Checks if s1 is above of s2's bottom.  
+	{
+		s1.SetCollision(true);
+		s2.SetCollision(true);
+	}
+	
 }
 
 /*
@@ -71,3 +78,28 @@ bool Collision::IsSameShapeCollide(float x1, float y1, float r1, float x2, float
 
 	return false;
 }
+
+
+/*	3D EXTENTION:
+		Cirle & Circle:
+			To transition from 2D to 3D with this model nothing would need to change,
+			as all collisions would still happen in a smaller distance then the sum of 
+			both Radi.
+
+		Square & Square:
+			Just like the Circle nothing would need to change. Assuming you wouldn't have
+			rotated objects. Instead of checking if the square was within the area of 4
+			different sides, you checking if the cube was withing the area of 6 different
+			faces.
+
+		Cirlce & Square:
+			For 3D, I would once again find distanceX and distanceY, but this time I would 
+			also find distanceZ. This would give me the distance from the vertice on the 
+			Z axis. Like distanceX and distanceY, would check if distanceZ was outside of 
+			range of (length/2 + radius). 
+
+			The float, CornerCheck, would now also add (distanceZ - length/2) ^3 and then
+			compare that to the radius^3. To see if its less then that. If so, they are
+			colliding.
+
+*/

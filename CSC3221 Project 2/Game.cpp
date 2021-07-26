@@ -340,8 +340,8 @@ void Test() {
 	IS_RANDOM = false;
 
 	// Setting up movementVector
-	movementVectorX = { 10, -10, 10, -10 };
-	movementVectorY = { 0, 0 , 0, 0 };
+  movementVectorX = { 10, -10, 10, -10};
+  movementVectorY = { 0, 0 , 0, 0};
 
 	// TEST 1: Circle colliding with Circle
 	multimap.insert(std::make_pair(0, new Circle(0, 0, 10 / 2)));
