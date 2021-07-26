@@ -14,8 +14,8 @@ const int CELL_SIZE = 100;
 const int GRID_MAX_WIDTH = 2000;
 const int GRID_MAX_HEIGHT = 2000;
 
-const float SHAPE_MAX_SIZE = 100.0f;
-const float SHAPE_MIN_SIZE = 70.0f;
+const float SHAPE_MAX_SIZE = 200.0f;
+const float SHAPE_MIN_SIZE = 150.0f;
 const float SHAPE_TRANSFORM_MULTIPLIER = 10.0f;
 
 bool IS_RANDOM = true;
